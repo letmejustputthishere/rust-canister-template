@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/berg_backend"
+]
+resolver = "2"
