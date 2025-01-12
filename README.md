@@ -1,61 +1,52 @@
-# `berg`
+# Preqreuisites
 
-Welcome to your new `berg` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+- dfx 0.24.3
+- node 22.12.0
+- npm 10.9.0
+- `pocket-ic` binary present in `/usr/local/bin/pocket-ic` (make sure it's executable)
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+# Lifecycle
 
-To learn more before you start working with `berg`, see the following documentation available online:
+The canister's lifecycle methods are managed in `src/backend/src/lifecycle.rs`. The `init` method in `main.rs` is called when the canister is created, and the `post_upgrade` method in `main.rs` is called after the canister is upgraded. Currently they both share the same implementation, that is when upgrading the canister you have to provide the same arguments as when creating the canister.
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+# State
 
-If you want to start working on your project right away, you might want to try the following commands:
+The application has a state that is stored in the canister. The state is a struct that is defined in `src/backend/src/state.rs`. The state state is lost when the canister is being upgraded. For data that should be persisted, use refer to the `Storage` section.
 
-```bash
-cd berg/
-dfx help
-dfx canister --help
+# Storage
+
+Data that is supposed to survive canister upgrades is defined in `src/backend/src/storage.rs`. The data is stored in the canister's stable memory and is not lost when the canister is being upgraded. This is faciliated by using the `ic-stable-structures` crate released by DFINITY.
+
+# Logging
+
+There are two levels of logging in the application:
+
+- INFO: General information about the application
+- DEBUG: Detailed information about the application
+
+To emit a log message, use the following syntax:
+
+```rust
+log!(INFO, "Received a request to fetch logs");
+log!(DEBUG, "Received a request to fetch logs");
 ```
 
-## Running the project locally
+Logs in query calls are not persisted.
 
-If you want to test your project locally, you can use the following commands:
+You can access canister logs via http requests to the canister's `/logs` endpoint. It accepts the following query parameters:
 
-```bash
-# Starts the replica, running in the background
-dfx start --background
+- `priority`: The log level to filter by. Possible values are `info` and `debug`.
+- `time`: Accepts a timestamp in nanoseconds. Only logs after this timestamp will be returned.
+- `sort`: The order in which logs are returned. Possible values are `asc` and `desc`. Default is `asc` when `time` is not provided, and `desc` otherwise.
 
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
-```
+# Metrics
 
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
+There are different metrics exposed via http requests to the canister's `/metrics` endpoint. You can modify them in `src/backend/src/metrics.rs`
 
-If you have made changes to your backend canister, you can generate a new candid interface with
+# Dashboard
 
-```bash
-npm run generate
-```
+The application has a dashboard that can be accessed via http requests to the canisters the `/dashboard` endpoint. It currently only exposes the way the user is greeted when calling `greet`. You can modify the `askama` dashboard template in `src/backend/dashboard.rs` and the corresponding HTML in `src/backend/templates/dashboard.html`.
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+# Candid Interface
 
-If you are making frontend changes, you can start a development server with
-
-```bash
-npm start
-```
-
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
-
-### Note on frontend environment variables
-
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
-
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+The canisters candid file is generated by leveraging the `ic_cdk::export_candid!()` macro and `candid-extractor`. You can read more about this approach [here](https://internetcomputer.org/docs/current/developer-docs/backend/rust/generating-candid/).

@@ -1,22 +1,22 @@
 {
   "canisters": {
-    "berg_backend": {
-      "candid": "src/berg_backend/berg_backend.did",
+    "backend": {
+      "candid": "src/backend/backend.did",
       "declarations": {
         "node_compatibility": true
       },
-      "package": "berg_backend",
+      "package": "backend",
       "type": "rust"
     },
-    "berg_frontend": {
+    "frontend": {
       "dependencies": [
-        "berg_backend"
+        "backend"
       ],
       "source": [
-        "src/berg_frontend/dist"
+        "src/frontend/dist"
       ],
       "type": "assets",
-      "workspace": "berg_frontend"
+      "workspace": "frontend"
     },
     "internet_identity": {
       "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",

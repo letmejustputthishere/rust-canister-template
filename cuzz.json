@@ -1,0 +1,6 @@
+{
+  "canisterName": "backend",
+  "callDelay": 0.01,
+  "port": 4943,
+  "timeLimit": 1
+}

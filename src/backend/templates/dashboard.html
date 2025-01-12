@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Template Dashboard</title>
+    <style>
+      body {
+        font-family: monospace;
+      }
+
+      table {
+        border: solid;
+        text-align: left;
+        width: 100%;
+        border-width: thin;
+      }
+
+      h3 {
+        font-variant: small-caps;
+        margin-top: 30px;
+        margin-bottom: 5px;
+      }
+
+      table table {
+        font-size: small;
+      }
+
+      .background {
+        margin: 0;
+        padding: 0;
+      }
+
+      .content {
+        max-width: 100vw;
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      tbody tr:nth-child(odd) {
+        background-color: #eeeeee;
+      }
+
+      .numeric {
+        text-align: right;
+      }
+
+      #output-bytes32-principal-error {
+        color: red;
+        font-style: italic;
+      }
+
+      #output-bytes32-principal-ok {
+        margin-top: 10px;
+        font-family: monospace;
+      }
+
+      #input-principal {
+        width: 63ch;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="background">
+      <div class="content">
+        <h3 id="metadata">Metadata</h3>
+        <table>
+          <tbody>
+            <tr id="greeting">
+              <th>Greeting</th>
+              <td>
+                <a>{{ greeting }}</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

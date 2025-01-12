@@ -1,0 +1,2 @@
+type InstallArgs = record { greeting : text };
+service : (InstallArgs) -> { greet : (text) -> (text) }
