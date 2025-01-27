@@ -39,6 +39,8 @@ You can access canister logs via http requests to the canister's `/logs` endpoin
 - `time`: Accepts a timestamp in nanoseconds. Only logs after this timestamp will be returned.
 - `sort`: The order in which logs are returned. Possible values are `asc` and `desc`. Default is `asc` when `time` is not provided, and `desc` otherwise.
 
+Note that logs are not persisted and are lost when the canister is being upgraded. You also can't log when the execution traps, as by design the state changes are rolled back. For this you can rely on the canister logging feature provided by the protocol by simply using `println!` exposed by the `ic_cdk`, note that here you only have one level of logging and 4KB of log storage. Read more [here](https://forum.dfinity.org/t/canister-logging-support-community-consideration/25571?u=cryptoschindler) and in the example [here](https://github.com/dfinity/examples/tree/master/rust/canister_logs).
+
 # Metrics
 
 There are different metrics exposed via http requests to the canister's `/metrics` endpoint. You can modify them in `src/backend/src/metrics.rs`
@@ -46,6 +48,16 @@ There are different metrics exposed via http requests to the canister's `/metric
 # Dashboard
 
 The application has a dashboard that can be accessed via http requests to the canisters the `/dashboard` endpoint. It currently only exposes the way the user is greeted when calling `greet`. You can modify the `askama` dashboard template in `src/backend/dashboard.rs` and the corresponding HTML in `src/backend/templates/dashboard.html`.
+
+# Persisted Event Log
+
+We use a `StableLog` to persist all greeting in stable memory. Usually this is used to store state changing events that should survive canister upgrades. They can be used to restore the canisters state that lives on the heap after an upgrade. You can learn more about the reasoning for this approach [here](https://mmapped.blog/posts/19-eventlog). It can also be used as an audit trail for the canister. In our case we just replay the event logs in the `post_upgrade` to restore a hashmap that keeps the count of greetings per name greeted.
+
+# Canbench
+
+# Tests
+
+There are some example integration tests leveraging `pocket-ic` in `src/backend/tests`. You can run them with `cargo test`.
 
 # Candid Interface
 

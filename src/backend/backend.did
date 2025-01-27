@@ -1,2 +1,7 @@
-type InstallArgs = record { greeting : text };
-service : (InstallArgs) -> { greet : (text) -> (text) }
+type Arg = variant { UpgradeArg : InitArg; InitArg : InitArg };
+type InitArg = record { greeting : text };
+service : (Arg) -> {
+  greet : (text) -> (text);
+  greeted_name_count : (text) -> (nat64) query;
+  total_greeted_names_count : () -> (nat64) query;
+}

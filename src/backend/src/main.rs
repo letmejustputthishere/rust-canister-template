@@ -1,8 +1,10 @@
 use backend::dashboard::DashboardTemplate;
+use backend::lifecycle::Arg;
 use backend::logs::INFO;
+use backend::state::audit::replay_events;
+use backend::state::{mutate_state, State};
 use backend::storage::record_event;
 use backend::{
-    lifecycle,
     metrics::encode_metrics,
     state::{self, initialize_state, read_state},
 };
@@ -11,27 +13,78 @@ use ic_canister_log::log;
 #[ic_cdk::update]
 fn greet(name: String) -> String {
     record_event(name.clone());
+    // insert the name into the greeted_names_count map
+    mutate_state(|s| {
+        s.greeted_names_count
+            .entry(name.clone())
+            .and_modify(|count| *count += 1)
+            .or_insert(1);
+    });
     format!("{}, {}!", read_state(|s| s.greeting.clone()), name)
 }
 
+#[ic_cdk::query]
+fn total_greeted_names_count() -> u64 {
+    if ic_cdk::api::in_replicated_execution() {
+        ic_cdk::trap("update call rejected");
+    }
+    read_state(|s| s.greeted_names_count.len() as u64)
+}
+
+#[ic_cdk::query]
+fn greeted_name_count(name: String) -> u64 {
+    if ic_cdk::api::in_replicated_execution() {
+        ic_cdk::trap("update call rejected");
+    }
+    read_state(|s| {
+        s.greeted_names_count
+            .get(&name)
+            .copied()
+            .unwrap_or_default()
+    })
+}
+
 #[ic_cdk::init]
-fn init(args: lifecycle::InstallArgs) {
-    post_upgrade(args);
+fn init(arg: Arg) {
+    match arg {
+        Arg::InitArg(init_arg) => {
+            log!(INFO, "[init]: initialized minter with arg: {:?}", init_arg);
+            initialize_state(
+                state::State::try_from(init_arg.clone())
+                    .expect("BUG: failed to initialize canister"),
+            );
+        }
+        Arg::UpgradeArg(_) => {
+            ic_cdk::trap("cannot init canister state with upgrade args");
+        }
+    }
 }
 
 #[ic_cdk::post_upgrade]
-fn post_upgrade(args: lifecycle::InstallArgs) {
-    initialize_state(
-        state::State::try_from(args.clone()).expect("BUG: failed to initialize canister"),
-    );
-    log!(INFO, "[init]: initialized canister with arg: {:?}", args);
+fn post_upgrade(arg: Arg) {
+    match arg {
+        Arg::InitArg(_) => {
+            ic_cdk::trap("cannot upgrade canister state with init args");
+        }
+        Arg::UpgradeArg(upgrade_arg) => {
+            initialize_state(State {
+                greeted_names_count: replay_events(),
+                ..State::try_from(upgrade_arg.clone()).expect("BUG: failed to initialize canister")
+            });
+            log!(
+                INFO,
+                "[upgrade]: upgraded canister with arg: {:?}",
+                upgrade_arg
+            );
+        }
+    }
 }
 
 #[ic_cdk::query(hidden = true)]
 fn http_request(req: backend::http_types::HttpRequest) -> backend::http_types::HttpResponse {
     use backend::http_types::HttpResponseBuilder;
 
-    if ic_cdk::api::data_certificate().is_none() {
+    if ic_cdk::api::in_replicated_execution() {
         ic_cdk::trap("update call rejected");
     }
 

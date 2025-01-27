@@ -1,4 +1,5 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::HashMap};
+pub mod audit;
 
 thread_local! {
     pub static STATE: RefCell<Option<State>> = RefCell::default();
@@ -7,6 +8,7 @@ thread_local! {
 #[derive(Clone, PartialEq, Debug)]
 pub struct State {
     pub greeting: String,
+    pub greeted_names_count: HashMap<String, u64>,
 }
 
 #[derive(Eq, PartialEq, Debug)]
