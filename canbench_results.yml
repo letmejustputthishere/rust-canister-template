@@ -1,0 +1,30 @@
+benches:
+  insert_events:
+    total:
+      instructions: 3057016653
+      heap_increase: 0
+      stable_memory_increase: 257
+    scopes: {}
+  insert_greetings:
+    total:
+      instructions: 2356019252
+      heap_increase: 1609
+      stable_memory_increase: 0
+    scopes: {}
+  post_upgrade_bench:
+    total:
+      instructions: 3815341288
+      heap_increase: 1609
+      stable_memory_increase: 0
+    scopes:
+      replay_events:
+        instructions: 3815325099
+        heap_increase: 1609
+        stable_memory_increase: 0
+  remove_greetings:
+    total:
+      instructions: 1939793474
+      heap_increase: 0
+      stable_memory_increase: 0
+    scopes: {}
+version: 0.1.9

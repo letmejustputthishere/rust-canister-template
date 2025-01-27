@@ -17,6 +17,7 @@ serde_bytes = "0.11.15"
 askama = "0.12.1"
 ic-stable-structures = "0.6.7"
 candid_parser = "0.1.4"
+canbench-rs = { version = "0.1.9", optional = true }
 
 [dev-dependencies]
 pocket-ic = "6.0.0" # needs to be a dev dependency, otherwise wasm build fails due to tokio peer dependency of pocket-ic

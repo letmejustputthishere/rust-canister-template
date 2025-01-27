@@ -1,4 +1,4 @@
-use backend::lifecycle::InitArg;
+use backend::lifecycle::{Arg, InitArg};
 use candid::{decode_one, encode_one, Principal};
 use pocket_ic::{PocketIc, WasmResult};
 use std::fs;
@@ -12,9 +12,9 @@ fn setup() -> (PocketIc, Principal) {
     let backend_canister = pic.create_canister();
     pic.add_cycles(backend_canister, 2_000_000_000_000); // 2T Cycles
     let wasm = fs::read(BACKEND_WASM).expect("Wasm file not found, run 'dfx build'.");
-    let arg = InitArg {
+    let arg = Arg::InitArg(InitArg {
         greeting: "Hello".to_string(),
-    };
+    });
     let encoded_arg = candid::encode_one(arg).expect("Failed to encode InstallArgs");
     pic.install_canister(backend_canister, wasm, encoded_arg, None);
     (pic, backend_canister)

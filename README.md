@@ -55,9 +55,25 @@ We use a `StableLog` to persist all greeting in stable memory. Usually this is u
 
 # Canbench
 
+[canbench](https://docs.rs/canbench-rs/latest/canbench_rs/) is a tool for benchmarking canisters on the Internet Computer. The config can be found in `canbench.yml`.
+
+To encode the deploy arguments in candid use the [`didc`](https://github.com/dfinity/candid/tree/master/tools/didc) tool:
+
+```bash
+didc encode '(variant { InitArg = record { greeting = "moin" } })' -d src/backend/backend.did -t '(Arg)'
+```
+
+Edit `rust-analyzer.cargo.features` in your `.vscode/settings.json` to enable the `canbench` feature for the `rust-analyzer` so `canbench` blocks are analyzed.
+
+Run `canbench --persist` to persist the current benchmark results, then `canbench` after code changes to compare the current benchmark results with the persisted ones.
+
 # Tests
 
 There are some example integration tests leveraging `pocket-ic` in `src/backend/tests`. You can run them with `cargo test`.
+
+# Cuzz
+
+Simple automatic fuzz testing for Internet Computer Protocol (ICP) canisters, configuration is defined in `cuzz.json`. Read more [here](https://github.com/demergent-labs/cuzz).
 
 # Candid Interface
 

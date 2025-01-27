@@ -25,6 +25,7 @@ fn greet(name: String) -> String {
 
 #[ic_cdk::query]
 fn total_greeted_names_count() -> u64 {
+    // this helps avoding expensive query calls to be executed in replicated mode
     if ic_cdk::api::in_replicated_execution() {
         ic_cdk::trap("update call rejected");
     }
@@ -33,6 +34,7 @@ fn total_greeted_names_count() -> u64 {
 
 #[ic_cdk::query]
 fn greeted_name_count(name: String) -> u64 {
+    // this helps avoding expensive query calls to be executed in replicated mode
     if ic_cdk::api::in_replicated_execution() {
         ic_cdk::trap("update call rejected");
     }
@@ -68,7 +70,11 @@ fn post_upgrade(arg: Arg) {
         }
         Arg::UpgradeArg(upgrade_arg) => {
             initialize_state(State {
-                greeted_names_count: replay_events(),
+                greeted_names_count: {
+                    #[cfg(feature = "canbench-rs")]
+                    let _p = canbench_rs::bench_scope("replay_events");
+                    replay_events()
+                },
                 ..State::try_from(upgrade_arg.clone()).expect("BUG: failed to initialize canister")
             });
             log!(
@@ -84,6 +90,7 @@ fn post_upgrade(arg: Arg) {
 fn http_request(req: backend::http_types::HttpRequest) -> backend::http_types::HttpResponse {
     use backend::http_types::HttpResponseBuilder;
 
+    // this helps avoding expensive query calls to be executed in replicated mode
     if ic_cdk::api::in_replicated_execution() {
         ic_cdk::trap("update call rejected");
     }
@@ -183,3 +190,58 @@ fn main() {}
 
 // Enable Candid export
 ic_cdk::export_candid!();
+
+#[cfg(feature = "canbench-rs")]
+mod benches {
+    use super::*;
+    use backend::lifecycle::UpgradeArg;
+    use canbench_rs::bench;
+
+    // Benchmarks inserting 1 million users into the state.
+    #[bench]
+    fn insert_greetings() {
+        mutate_state(|s| {
+            for i in 0..1_000_000 {
+                s.greeted_names_count.insert(i.to_string(), 1);
+            }
+        })
+    }
+
+    #[bench]
+    fn insert_events() {
+        for i in 0..1_000_000 {
+            record_event(i.to_string());
+        }
+    }
+
+    // Benchmarks removing 1 million users from the state.
+    #[bench(raw)]
+    fn remove_greetings() -> canbench_rs::BenchResult {
+        insert_greetings();
+
+        // Only benchmark removing users. Inserting users isn't
+        // included in the results of our benchmark.
+        canbench_rs::bench_fn(|| {
+            mutate_state(|s| {
+                for i in 0..1_000_000 {
+                    s.greeted_names_count.remove(&i.to_string());
+                }
+            })
+        })
+    }
+
+    #[bench(raw)]
+    fn post_upgrade_bench() -> canbench_rs::BenchResult {
+        // this shouldnt affect the benchmark results as
+        // post_upgrade is only relying on the event log
+        insert_events();
+
+        // Only benchmark the pre_upgrade. Inserting users isn't
+        // included in the results of our benchmark.
+        canbench_rs::bench_fn(|| {
+            post_upgrade(Arg::UpgradeArg(UpgradeArg {
+                greeting: "hoi".to_string(),
+            }))
+        })
+    }
+}
