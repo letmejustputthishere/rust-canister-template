@@ -1,3 +1,7 @@
+# What is this?
+
+This starter is a collection of helpful patterns, tooling and best practices for developing canisters in Rust. You can read more below.
+
 # Preqreuisites
 
 - dfx 0.24.3
