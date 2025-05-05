@@ -6,7 +6,19 @@
         "node_compatibility": true
       },
       "package": "backend",
-      "type": "rust"
+      "type": "custom",
+      "shrink": true,
+      "gzip": true,
+      "wasm": "target/wasm32-unknown-unknown/release/backend.wasm",
+      "build": [
+        "cargo build --target wasm32-unknown-unknown --release -p backend",
+        "candid-extractor target/wasm32-unknown-unknown/release/backend.wasm > src/backend/backend.did"
+      ],
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
     },
     "frontend": {
       "dependencies": [
